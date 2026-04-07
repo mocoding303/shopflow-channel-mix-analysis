@@ -74,7 +74,9 @@ Synthetic data modelling real e-commerce patterns. Intentionally structured so G
 
 ## Dashboard
 
-https://lookerstudio.google.com/reporting/1b308ab5-baa0-4574-8e63-dda8d391fa56
-https://docs.google.com/document/d/1AnmV4tF9UYSPy86YOqo5FR-3otkNFNlW/edit?usp=sharing&ouid=113948822083193510761&rtpof=true&sd=true
+Case study document: https://docs.google.com/document/d/1AnmV4tF9UYSPy86YOqo5FR-3otkNFNlW/edit?usp=sharing&ouid=113948822083193510761&rtpof=true&sd=true
+
+Looker studio visualisation: https://lookerstudio.google.com/reporting/1b308ab5-baa0-4574-8e63-dda8d391fa56
+
 
 
