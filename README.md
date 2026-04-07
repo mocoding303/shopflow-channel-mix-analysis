@@ -1,186 +1,95 @@
--- ============================================================
--- ShopFlow Channel Mix & Attribution Analysis
--- Performance Marketing Case Study — Q1 2025
--- Dataset: 1,080 rows | 90 days | 3 channels | 12 placements
--- ============================================================
+# ShopFlow Channel Mix & Attribution Analysis
 
--- Fix date format for DD/MM/YYYY imports
-ALTER DATABASE shopflow SET datestyle = 'ISO, DMY';
+**Budget optimization for a Berlin e-commerce company — identifying €20,103 in projected revenue gains through placement-level reallocation, without increasing total spend.**
 
--- Create table
-CREATE TABLE channel_mix (
-    date DATE,
-    channel VARCHAR(50),
-    placement VARCHAR(50),
-    impressions INTEGER,
-    clicks INTEGER,
-    ctr NUMERIC(5,2),
-    cpc NUMERIC(10,2),
-    amount_spent NUMERIC(10,2),
-    purchases INTEGER,
-    purchase_value NUMERIC(10,2),
-    roas NUMERIC(10,2),
-    cpa NUMERIC(10,2),
-    search_type VARCHAR(20)
-);
+## Business Problem
 
--- Verify import: expect 1,080 rows
-SELECT COUNT(*) FROM channel_mix;
+ShopFlow spent €119,545 across three channels (Google Search, Meta Ads, TikTok Ads) in Q1 2025. The CMO needed to know where to invest next quarter's budget, but every channel manager was claiming credit for the same conversions. The team relied on last-click attribution in Google Analytics — a model that systematically overvalues the last touchpoint and ignores upper-funnel contribution.
 
+## Key Findings
 
--- ============================================================
--- LAYER 1 — DESCRIPTIVE: Channel Performance
--- Business question: How did each channel perform last quarter?
--- ============================================================
+**1. Last-click attribution masks the truth**
+Google Search appeared dominant at 2.45× ROAS, while TikTok looked like a total loss at 0.36×. A junior analyst would cut TikTok immediately.
 
-SELECT channel,
-       ROUND(SUM(amount_spent), 2) AS spend,
-       SUM(purchases) AS purchases,
-       ROUND(SUM(purchase_value), 2) AS revenue,
-       ROUND(SUM(purchases)::NUMERIC / SUM(clicks)::NUMERIC * 100, 2) AS cvr,
-       ROUND(SUM(amount_spent) / NULLIF(SUM(purchases), 0), 2) AS cpa,
-       ROUND(AVG(roas), 2) AS avg_roas
-FROM channel_mix
-GROUP BY 1
-ORDER BY avg_roas DESC;
+**2. Branded search tells the real story**
+75% of Google's conversions came from branded search — customers who already knew ShopFlow before they Googled. Strip out branded search and Google's ROAS drops from 2.45× to 1.17×, barely breaking even. TikTok and Meta create the brand awareness that Google captures credit for.
 
--- Finding: Google Search delivered the highest ROAS at 2.45x while consuming
--- 38% of total spend, while TikTok generated only 0.36x ROAS on 22% of spend
--- — returning a net loss of €0.64 for every euro invested.
+**3. €12,569 in wasted spend identified**
+Three placements — Brand Takeover (€2,715), Display Network (€4,500), and TopView (€5,353) — consumed 10.5% of total budget while generating only 3 purchases combined.
 
+**4. €20,103 projected revenue gain from reallocation**
+Reallocating freed budget to Search Top (+€4,000), Instagram Stories (+€5,000), and In-Feed TikTok (+€3,569) generates a 17% revenue uplift — without increasing total spend.
 
--- ============================================================
--- LAYER 2 — DIAGNOSTIC: Branded vs Non-Branded Search
--- Business question: Is Google's strong performance real or an
--- attribution artifact?
--- ============================================================
+**5. All channels flat or declining**
+ROAS stagnated across all three channels in Q1, suggesting seasonal headwinds or market saturation. Budget reallocation improves efficiency but won't reverse a broader demand slowdown.
 
-SELECT search_type,
-       ROUND(SUM(amount_spent), 2) AS spend,
-       SUM(purchases) AS purchases,
-       ROUND(SUM(purchases)::NUMERIC / SUM(clicks)::NUMERIC * 100, 2) AS cvr,
-       ROUND(SUM(amount_spent) / NULLIF(SUM(purchases), 0), 2) AS cpa,
-       ROUND(AVG(roas), 2) AS avg_roas
-FROM channel_mix
-WHERE search_type != 'N/A'
-GROUP BY 1
-ORDER BY avg_roas DESC;
+## Analytical Framework
 
--- Finding: 75% of Google's conversions (562 of 745) come from branded search
--- — customers who already knew ShopFlow before they Googled. Strip out branded
--- search and Google's ROAS drops from 2.45x to 1.17x, barely breaking even.
--- TikTok and Meta create the awareness that Google captures credit for.
+| Layer | Question | Approach |
+|-------|----------|----------|
+| Descriptive | How did each channel perform? | Channel-level KPI comparison |
+| Diagnostic | Can we trust these numbers? | Branded vs non-branded search decomposition |
+| Placement Efficiency | Where is money being wasted? | 12-placement drill-down with CPA and ROAS |
+| Time Trends | Is performance improving or declining? | Monthly breakdown with RANK() window functions |
+| Prescriptive | What should we do about it? | Budget reallocation model with projected revenue impact |
 
+## Recommendations
 
--- ============================================================
--- LAYER 3 — PLACEMENT EFFICIENCY
--- Business question: Which placements are burning money and
--- which are worth scaling?
--- ============================================================
+**Immediate (Week 1–2)**
+- Cut Brand Takeover, Display Network, and TopView — freeing €12,569
+- Reallocate to Instagram Stories, Search Top, and In-Feed TikTok
+- Set weekly ROAS monitoring with a 20% decline threshold
 
-SELECT channel,
-       placement,
-       SUM(purchases) AS purchases,
-       ROUND(AVG(roas), 2) AS avg_roas,
-       ROUND(SUM(amount_spent) / NULLIF(SUM(purchases), 0), 2) AS cpa,
-       ROUND(SUM(amount_spent), 2) AS spend
-FROM channel_mix
-GROUP BY 1, 2
-ORDER BY avg_roas DESC;
+**Short-Term (Month 1)**
+- Run a 4-week geo-holdout test: pause TikTok in one market to measure its incremental impact on Google and Meta conversions
+- A/B test TikTok creatives targeting 25% CVR improvement within 30 days
 
--- Finding: Three placements — Brand Takeover, Display Network, and TopView —
--- consumed €12,569 (10.5% of total budget) while generating only 3 purchases
--- combined. Instagram Stories is the hidden opportunity: strongest Meta
--- performer (1.71x ROAS, €58.48 CPA) with room to scale.
+**Medium-Term (Month 2–3)**
+- Migrate from last-click to data-driven attribution within 60 days
+- If TikTok creative improvements fail, reallocate based on new attribution data — not last-click
 
+## Dataset
 
--- ============================================================
--- LAYER 4 — TIME TRENDS: Monthly Performance with Ranking
--- Business question: Is channel performance improving or
--- declining over Q1?
--- ============================================================
+| Attribute | Detail |
+|-----------|--------|
+| Rows | 1,080 |
+| Period | January 1 – March 31, 2025 |
+| Channels | Google Search, Meta Ads, TikTok Ads |
+| Placements | 12 (4 per channel) |
+| Columns | date, channel, placement, impressions, clicks, ctr, cpc, amount_spent, purchases, purchase_value, roas, cpa, search_type |
 
-SET datestyle = 'ISO, DMY';
+Synthetic data modelling real e-commerce patterns. Intentionally structured so Google appears strongest and TikTok weakest under last-click attribution — creating a built-in analytical trap that mirrors real-world attribution challenges.
 
-WITH monthly AS (
-    SELECT channel,
-           TO_CHAR(date::DATE, 'Month') AS month,
-           ROUND(SUM(amount_spent), 2) AS spend,
-           ROUND(AVG(roas), 2) AS avg_roas,
-           SUM(purchases) AS purchases
-    FROM channel_mix
-    GROUP BY 1, 2
-)
-SELECT *,
-       RANK() OVER (PARTITION BY month ORDER BY avg_roas DESC) AS roas_rank
-FROM monthly
-ORDER BY month, roas_rank;
+## Tools & SQL Techniques
 
--- Finding: All three channels show flat or declining ROAS across Q1,
--- suggesting potential seasonal headwinds, market saturation, or increased
--- competitive pressure. Budget reallocation can improve efficiency, but
--- will not reverse a broader demand slowdown.
+**Tools:** PostgreSQL 17, pgAdmin 4, Looker Studio
 
+**SQL techniques used:**
+- CTEs (WITH clause) for intermediate calculations
+- CASE WHEN for conditional budget reallocation logic
+- RANK() OVER (PARTITION BY) for window function ranking
+- NULLIF() to prevent division by zero errors
+- TO_CHAR() for date extraction and formatting
+- AVG for ratio metrics (ROAS), SUM for volume metrics (spend, purchases)
 
--- ============================================================
--- LAYER 5 — PRESCRIPTIVE: Budget Reallocation Model
--- Business question: What is the projected revenue impact of
--- reallocating spend from dead placements to top performers?
--- ============================================================
+## Dashboard
 
-WITH projected AS (
-    SELECT channel,
-           placement,
-           SUM(amount_spent) AS current_spend,
-           AVG(roas) AS avg_roas,
-           SUM(purchase_value) AS current_revenue,
-           CASE
-               WHEN placement = 'Brand Takeover' THEN 0
-               WHEN placement = 'Display Network' THEN 0
-               WHEN placement = 'TopView' THEN 0
-               WHEN placement = 'Instagram Stories' THEN SUM(amount_spent) + 5000
-               WHEN placement = 'Search Top' THEN SUM(amount_spent) + 4000
-               WHEN placement = 'In-Feed' THEN SUM(amount_spent) + 3569
-               ELSE SUM(amount_spent)
-           END AS projected_spend,
-           CASE
-               WHEN placement = 'Brand Takeover' THEN 0
-               WHEN placement = 'Display Network' THEN 0
-               WHEN placement = 'TopView' THEN 0
-               WHEN placement = 'Instagram Stories' THEN (SUM(amount_spent) + 5000) * AVG(roas)
-               WHEN placement = 'Search Top' THEN (SUM(amount_spent) + 4000) * AVG(roas)
-               WHEN placement = 'In-Feed' THEN (SUM(amount_spent) + 3569) * AVG(roas)
-               ELSE SUM(amount_spent) * AVG(roas)
-           END AS projected_revenue
-    FROM channel_mix
-    GROUP BY 1, 2
-)
-SELECT channel,
-       placement,
-       ROUND(current_spend, 2) AS current_spend,
-       ROUND(avg_roas, 2) AS avg_roas,
-       ROUND(current_revenue, 2) AS current_revenue,
-       ROUND(projected_spend, 2) AS projected_spend,
-       ROUND(projected_revenue, 2) AS projected_revenue,
-       ROUND(projected_revenue - current_revenue, 2) AS revenue_difference
-FROM projected
-ORDER BY revenue_difference DESC;
+https://lookerstudio.google.com/reporting/1b308ab5-baa0-4574-8e63-dda8d391fa56
 
--- Finding: Reallocating €12,569 from three non-performing placements to three
--- high-efficiency placements generates a net projected revenue gain of €20,103
--- — without increasing total budget. The largest gains come from Search Top
--- (+€9,874) and Instagram Stories (+€8,573).
--- Caveat: Projections assume ROAS holds at current levels. Monitor weekly
--- with a 20% decline threshold.
+*Replace the link above with your Looker Studio share URL.*
 
+## Repository Structure
 
--- ============================================================
--- SQL TECHNIQUES USED
--- ============================================================
--- • CTEs (WITH clause) for intermediate calculations
--- • CASE WHEN for conditional budget reallocation logic
--- • RANK() OVER (PARTITION BY) for window function ranking
--- • NULLIF() to prevent division by zero errors
--- • TO_CHAR() for date extraction and formatting
--- • AVG for ratio metrics (ROAS), SUM for volume metrics (spend, purchases)
--- • Aggregation before division: SUM(purchases)/SUM(clicks), not AVG(rate)
+```
+shopflow-channel-mix-analysis/
+├── README.md
+├── shopflow_channel_mix_analysis.sql    # All SQL queries with findings
+├── channel_mix_data_v2.csv             # Dataset (1,080 rows)
+└── shopflow_case_study.docx            # Full case study document
+```
+
+## Author
+
+**Mouhssine** — Performance Marketing Analyst based in Berlin. Combining 3+ years of hands-on media buying experience (Meta Ads, Google Ads, TikTok, Snapchat) with data analytics to turn campaign data into business decisions.
+
+[LinkedIn](#) · [GitHub](#)
