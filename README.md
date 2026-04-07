@@ -76,20 +76,5 @@ Synthetic data modelling real e-commerce patterns. Intentionally structured so G
 
 https://lookerstudio.google.com/reporting/1b308ab5-baa0-4574-8e63-dda8d391fa56
 
-*Replace the link above with your Looker Studio share URL.*
 
-## Repository Structure
 
-```
-shopflow-channel-mix-analysis/
-├── README.md
-├── shopflow_channel_mix_analysis.sql    # All SQL queries with findings
-├── channel_mix_data_v2.csv             # Dataset (1,080 rows)
-└── shopflow_case_study.docx            # Full case study document
-```
-
-## Author
-
-**Mouhssine** — Performance Marketing Analyst based in Berlin. Combining 3+ years of hands-on media buying experience (Meta Ads, Google Ads, TikTok, Snapchat) with data analytics to turn campaign data into business decisions.
-
-[LinkedIn](#) · [GitHub](#)
